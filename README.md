@@ -6,6 +6,7 @@ This is it: a Docker multi-container environment with Hadoop (HDFS), Spark and H
 
 The only thing lacking, is that Hive server doesn't start automatically. To be added when I understand how to do that in docker-compose.
 
+![ex_screenshot](./echosystem.png)
 
 ## Quick Start
 
@@ -259,3 +260,27 @@ The available configurations are:
 * /etc/hadoop/mapred-site.xml  MAPRED_CONF
 
 If you need to extend some other configuration file, refer to base/entrypoint.sh bash script.
+
+
+## Quick Start airflow
+
+* `start airflow shell `
+```
+  docker exec -it airflow-server /bin/bash
+```
+
+* `active python venv`
+```
+  source ~/airflow-venv/bin/activate
+```
+
+* `start airflow webserver`
+```
+  airflow webserver
+```
+
+* `start airflow scheduler`
+```
+  airflow scheduler
+```
+

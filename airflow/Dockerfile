@@ -27,6 +27,8 @@ ENV USER=root
 ENV SPARK_HOME=/opt/spark
 ENV PATH=/opt/spark/bin/:/opt/hive/bin:/:/opt/hadoop/bin/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
+# RUN wget http://archive.apache.org/dist/sqoop/1.4.7/sqoop-1.4.7.bin__hadoop-2.6.0.tar.gz
+
 
 RUN chmod a+x /run.sh && rm -rf /root/airflow/airflow.cfg
 
