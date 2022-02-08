@@ -3,7 +3,7 @@ version: "3"
 services:
   
   airflow-server:
-    image: makengi12/airflow:1.4
+    image: makengi12/airflow:1.5
     #image: airflow_test
     container_name: airflow-server
     # entrypoint: ./run.sh
@@ -14,7 +14,11 @@ services:
       - 8086:8086
     restart: "on-failure"
     stdin_open: true
-    tty: true  
+    tty: true
+    environment:
+      - HADOOP_HOME=/opt/hadoop
+      - HADOOP_COMMON_HOME=/opt/hadoop
+      - HADOOP_MAPRED_HOME=/opt/hadoop
 
   namenode:
     image: makengi12/namenode:1.0
