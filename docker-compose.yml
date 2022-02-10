@@ -238,8 +238,48 @@ services:
     volumes: 
       - pipeline-zookeeper-c-volume:/data
 
+  pipeline-kafka-1: 
+    image: makengi12/kafka:1.0
+    container_name: pipeline-kafka-1 
+    environment: 
+      BROKER_ID: 1 
+    hostname: pipeline-kafka-1  
+    restart: always 
+    volumes: 
+      - pipeline-kafka-1-volume:/data 
+        
+  pipeline-kafka-2: 
+    image: makengi12/kafka:1.0
+    container_name: pipeline-kafka-2 
+    environment: 
+      BROKER_ID: 2 
+    hostname: pipeline-kafka-2 
+    restart: always 
+    volumes: 
+      - pipeline-kafka-2-volume:/data 
     
- 
+  pipeline-kafka-3:
+    image: makengi12/kafka:1.0
+    container_name: pipeline-kafka-3 
+    environment: 
+      BROKER_ID: 3 
+    hostname: pipeline-kafka-3 
+    restart: always
+    volumes: 
+      - pipeline-kafka-3-volume:/data
+
+  kafka_ui: 
+    image: obsidiandynamics/kafdrop 
+    restart: "always"
+    ports: 
+      - "9020:9000"
+    environment: 
+      KAFKA_BROKERCONNECT: "pipeline-kafka-1:9092,pipeline-kafka-2:9092,pipeline-kafka-3:9092"
+      JVM_OPTS: "-Xms32M -Xmx64M"
+
+    
+
+
 volumes:
   hadoop_namenode:
   hadoop_datanode:
@@ -252,4 +292,7 @@ volumes:
   pipeline-zookeeper-a-volume:
   pipeline-zookeeper-b-volume:   
   pipeline-zookeeper-c-volume:
+  pipeline-kafka-1-volume:
+  pipeline-kafka-2-volume:
+  pipeline-kafka-3-volume:
   
