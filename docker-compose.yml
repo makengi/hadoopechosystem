@@ -184,7 +184,16 @@ services:
     volumes:
        - zeppelin_logs:/logs
        - zeppelin_data:/data
-       - zeppelin_notebook:/notebook  
+       - zeppelin_notebook:/notebook 
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+       - grafana:/var/lib/grafana
+
 
   hbase:
     image: makengi12/hbase-standalone:1.0
@@ -194,9 +203,42 @@ services:
       - 16010:16010
       - 16020:16020
       - 16030:16030
-      - 2888:2888
-      - 3888:3888
-      - 2181:2181    
+      # - 2888:2888
+      # - 3888:3888
+      # - 2181:2181    
+
+  
+  pipeline-zookeeper-a:
+    image: makengi12/zookeeper:1.0
+    container_name: pipeline-zookeeper-a 
+    restart: always 
+    hostname: pipeline-zookeeper-a
+    environment: 
+        MY_ID: 1 
+    volumes: 
+      - pipeline-zookeeper-a-volume:/data
+
+  pipeline-zookeeper-b: 
+    image: makengi12/zookeeper:1.0
+    container_name: pipeline-zookeeper-b 
+    restart: always 
+    hostname: pipeline-zookeeper-b
+    environment: 
+        MY_ID: 2 
+    volumes: 
+      - pipeline-zookeeper-b-volume:/data 
+    
+  pipeline-zookeeper-c: 
+    image: makengi12/zookeeper:1.0
+    container_name: pipeline-zookeeper-c  
+    restart: always 
+    hostname: pipeline-zookeeper-c
+    environment: 
+        MY_ID: 3 
+    volumes: 
+      - pipeline-zookeeper-c-volume:/data
+
+    
  
 volumes:
   hadoop_namenode:
@@ -206,6 +248,8 @@ volumes:
   zeppelin_logs:
   zeppelin_data:
   zeppelin_notebook:
-      
-
-
+  grafana:
+  pipeline-zookeeper-a-volume:
+  pipeline-zookeeper-b-volume:   
+  pipeline-zookeeper-c-volume:
+  
