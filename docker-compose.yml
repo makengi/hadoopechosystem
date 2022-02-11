@@ -82,7 +82,7 @@ services:
       - ./hadoop.env
 
   spark-master:
-    image: makengi12/spark-master:1.0
+    image: makengi12/spark-master:1.1
     container_name: spark-master
     build: ./master
     depends_on:
@@ -277,7 +277,12 @@ services:
       KAFKA_BROKERCONNECT: "pipeline-kafka-1:9092,pipeline-kafka-2:9092,pipeline-kafka-3:9092"
       JVM_OPTS: "-Xms32M -Xmx64M"
 
-    
+  flume:
+    image: makengi12/flume:1.0
+    container_name: flume
+    restart: always
+    ports:
+      - "4045:4045" # Avro 
 
 
 volumes:
