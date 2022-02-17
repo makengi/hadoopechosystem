@@ -24,30 +24,36 @@ services:
     image: makengi12/namenode:1.0
     # build: ./namenode
     container_name: namenode
+    hostname: datanode
     restart: always
     ports:
       - 9870:9870
-      - 9010:9000
+        #      - 9010:9000
       - 8042:8042
+      - 9000:9000
     volumes:
       - hadoop_namenode:/hadoop/dfs/name
     environment:
       - CLUSTER_NAME=test
-      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - CORE_CONF_fs_defaultFS=hdfs://0.0.0.0:9000
     env_file:
       - ./hadoop.env
 
   datanode:
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
     container_name: datanode
+    hostname: datanode
     restart: always
+    depends_on:
+      - namenode
     volumes:
       - hadoop_datanode:/hadoop/dfs/data
     environment:
       SERVICE_PRECONDITION: "namenode:9870"
-      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+      CORE_CONF_fs_defaultFS: hdfs://192.168.0.12:9000
     ports:
       - "9864:9864"
+      - 9866:9866
     env_file:
       - ./hadoop.env
 
@@ -108,8 +114,8 @@ services:
     environment:
       - "SPARK_MASTER=spark://spark-master:7077"
       - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
-      - MEMORY=3g
-      - CORE=2
+      - MEMORY=4g
+      - CORE=3
 
   spark-worker-2:
     image: makengi12/spark-worker:1.0
@@ -120,8 +126,8 @@ services:
       - "8082:8081"
     environment:
       - "SPARK_MASTER=spark://spark-master:7077"
-      - MEMORY=3g
-      - CORE=2  
+      - MEMORY=4g
+      - CORE=3  
 
   spark-worker-3:
     image: makengi12/spark-worker:1.0
@@ -132,7 +138,7 @@ services:
       - "8083:8081"
     environment:
       - "SPARK_MASTER=spark://spark-master:7077"    
-      - MEMORY=3g
+      - MEMORY=4g
       - CORE=2
 
 
