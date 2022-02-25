@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y openjdk-8-jdk \
  && apt-get clean \
  && apt-get install -y wget
 
-ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64
 ENV HADOOP_VERSION=2.7.4
 ENV HADOOP_PREFIX=/opt/hadoop
 ENV HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop

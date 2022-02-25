@@ -37,6 +37,8 @@ COPY lib/stax2-api-3.1.4.jar /opt/flume/lib
 COPY lib/commons-configuration2-2.1.1.jar /opt/flume/lib
 COPY lib/commons-lang3-3.12.0.jar /opt/flume/lib
 
+COPY config/OneM2M-Avro-Hdfs.conf $FLUME_HOME/conf
+COPY config/OneM2M-Avro.conf $FLUME_HOME/conf
 COPY config/OneM2M-Kafka-Agent-conf.properties $FLUME_HOME/conf
 COPY config/test.conf $FLUME_HOME/conf
 COPY config/init.sh /init.sh
