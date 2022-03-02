@@ -33,6 +33,7 @@ services:
         #      - 9010:9000
       - 8042:8042
       - 9000:9000
+      - 50070:50070
     volumes:
       - hadoop_namenode:/hadoop/dfs/name
     environment:
@@ -299,7 +300,34 @@ services:
     container_name: flume
     restart: always
     ports:
-      - 4545:4545 # Avro 
+      - 4545:4545 # Avro
+
+  cloudera:
+    image: gethue/hue:4.10.0
+    hostname: hue
+    container_name: hue
+    dns: 8.8.8.8
+    ports:
+      - "8988:8988"
+    volumes:
+      - ./hue/ini/hue.ini:/usr/share/hue/desktop/conf/z-hue.ini
+    depends_on:
+      - "database"
+
+  database:
+    image: mysql:5.7
+    ports:
+      - "33061:3306"
+    command: --init-file /data/application/init.sql
+    volumes:
+      - data:/var/lib/mysql
+      - ./hue/ini/init.sql:/data/application/init.sql
+    environment:
+      MYSQL_ROOT_USER: root
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: hue
+      MYSQL_USER: root
+      MYSQL_PASSWORD: secret 
 
 
 volumes:
@@ -317,4 +345,4 @@ volumes:
   pipeline-kafka-1-volume:
   pipeline-kafka-2-volume:
   pipeline-kafka-3-volume:
-  
+  data:
