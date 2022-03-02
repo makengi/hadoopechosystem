@@ -31,7 +31,7 @@ services:
     ports:
       - 9870:9870
         #      - 9010:9000
-      - 8042:8042
+      # - 8042:8042
       - 9000:9000
       - 50070:50070
     volumes:
@@ -76,7 +76,10 @@ services:
   nodemanager1:
     image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
     container_name: nodemanager
+    hostname: nodemanager
     restart: always
+    ports:
+      - 8042:8042
     environment:
       SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
     env_file:
@@ -85,7 +88,10 @@ services:
   historyserver:
     image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8
     container_name: historyserver
+    hostname: historyserver
     restart: always
+    ports:
+      - 8188:8188
     environment:
       SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
     volumes:
@@ -315,19 +321,24 @@ services:
       - "database"
 
   database:
-    image: mysql:5.7
+    image: 'bitnami/mysql:latest'
+    container_name: mysql
+    restart: always
     ports:
-      - "33061:3306"
-    command: --init-file /data/application/init.sql
+      - "3306:3306"
     volumes:
-      - data:/var/lib/mysql
-      - ./hue/ini/init.sql:/data/application/init.sql
+      - data:/bitnami/mysql/data
+      # - ./hue/ini/init.sql:/data/application/init.sql
     environment:
-      MYSQL_ROOT_USER: root
-      MYSQL_ROOT_PASSWORD: secret
-      MYSQL_DATABASE: hue
-      MYSQL_USER: root
-      MYSQL_PASSWORD: secret 
+      - ALLOW_EMPTY_PASSWORD=yes 
+      - MYSQL_USER=hue
+      - MYSQL_PASSWORD=hue
+      - MYSQL_DATABASE=hue
+      # MYSQL_ROOT_USER: root
+      # MYSQL_ROOT_PASSWORD: secret
+      # MYSQL_DATABASE: hue
+      # MYSQL_USER: root
+      # MYSQL_PASSWORD: secret 
 
 
 volumes:
