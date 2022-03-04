@@ -4,15 +4,15 @@
 
 . "/spark/bin/load-spark-env.sh"
 
-
-
-
 mkdir -p $SPARK_WORKER_LOG
+
+. /add-hostname.sh
 
 export SPARK_HOME=/spark
 
 echo $MEMORY
 echo $CORE
+
 
 ln -sf /dev/stdout $SPARK_WORKER_LOG/spark-worker.out
 
