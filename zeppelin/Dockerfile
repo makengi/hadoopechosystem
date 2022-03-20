@@ -7,7 +7,7 @@ ENV BASE_URL=https://archive.apache.org/dist/spark/
 
 # 스파크 하둡 버전 설정 
 # 스파크 3.2.0 제플린 0.10.0 호환되지 않아서  3.1.2로 변경
-ENV SPARK_VERSION=3.0.3
+ENV SPARK_VERSION=3.0.0
 ENV HADOOP_VERSION=3.2
 
 # 스파크 기본 설정

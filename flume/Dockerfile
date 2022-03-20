@@ -22,7 +22,8 @@ RUN apt-get install -y wget \
 # ./logs 경로를 => /opt/flume/logs로 변경
 && sed -i 's/\.\/logs/\/opt\/flume\/logs/g' $FLUME_HOME/conf/log4j.properties \ 
 # guava 구버전 <= 하둡3버전과 호환 되지 않음
-&& mv /opt/flume/lib/guava-11.0.2.jar /opt/flume/lib/guava-11.0.2.jar.bak
+&& mv /opt/flume/lib/guava-11.0.2.jar /opt/flume/lib/guava-11.0.2.jar.bak \ 
+&& mkdir -p /opt/work 
 
 
 COPY config/OneM2M-Agent-conf.properties $FLUME_HOME/conf

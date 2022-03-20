@@ -19,6 +19,7 @@ COPY add-hostname.sh /
 
 #COPY bde-spark.css /css/org/apache/spark/ui/static/timeline-view.css
 
+
 RUN chmod +x *.sh \
       && apt-get update \
       && apt-get install -y wget \

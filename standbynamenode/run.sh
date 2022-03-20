@@ -15,19 +15,13 @@ echo "remove lost+found from $namedir"
 rm -r $namedir/lost+found
 
 
+$HADOOP_HOME/bin/hdfs namenode -bootstrapStandby -force -skipSharedEditsCheck
 
-if [ "`ls -A $namedir`" == "" ]; then
-  echo "Formatting zkfc"
-  $HADOOP_HOME/bin/hdfs zkfc -formatZK -force
-  echo "Formatting namenode name directory: $namedir"
-  $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR namenode -format $CLUSTER_NAME
-fi
-
-# $HADOOP_HOME/bin/hdfs --daemon start namenode
-# $HADOOP_HOME/bin/hdfs --daemon --config $HADOOP_CONF_DIR namenode
+# $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR namenode
 $HADOOP_HOME/bin/hdfs --daemon start namenode
 $HADOOP_HOME/bin/hdfs --daemon start zkfc
-# $HADOOP_HOME/bin/hdfs --daemon start zkfc
 
 # 자동으로 종료되지 않도록 방지한다. 
 tail -f /dev/null
+
+
