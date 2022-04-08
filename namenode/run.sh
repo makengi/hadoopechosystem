@@ -21,6 +21,8 @@ if [ "`ls -A $namedir`" == "" ]; then
   $HADOOP_HOME/bin/hdfs zkfc -formatZK -force
   echo "Formatting namenode name directory: $namedir"
   $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR namenode -format $CLUSTER_NAME
+  echo "##### Init  Shared Directory #####"
+  hdfs namenode -initializeSharedEdits -force
 fi
 
 # $HADOOP_HOME/bin/hdfs --daemon start namenode
