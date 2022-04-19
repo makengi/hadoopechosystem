@@ -37,14 +37,18 @@ COPY lib/htrace-core4-4.1.0-incubating.jar /opt/flume/lib
 COPY lib/stax2-api-3.1.4.jar /opt/flume/lib
 COPY lib/commons-configuration2-2.1.1.jar /opt/flume/lib
 COPY lib/commons-lang3-3.12.0.jar /opt/flume/lib
+COPY lib/imr-flume.jar /opt/flume/lib
 
-COPY config/OneM2M-Avro-Hdfs.conf $FLUME_HOME/conf
 COPY config/OneM2M-Avro.conf $FLUME_HOME/conf
+COPY config/OneM2M-Avro-Hdfs.conf $FLUME_HOME/conf
 COPY config/OneM2M-Kafka-Agent-conf.properties $FLUME_HOME/conf
 COPY config/test.conf $FLUME_HOME/conf
 COPY config/init.sh /init.sh
+COPY config/flume-env.sh $FLUME_HOME/conf
+
 
 RUN chmod a+x /init.sh
+RUN /bin/bash -c "source /opt/flume/conf/flume-env.sh"
 
 # Shell execute
 CMD ["/init.sh"]
