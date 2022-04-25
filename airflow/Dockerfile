@@ -39,7 +39,9 @@ RUN wget http://archive.apache.org/dist/sqoop/1.4.7/sqoop-1.4.7.bin__hadoop-2.6.
     && wget -P /tmp/ http://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.37.tar.gz \
     && tar -C /tmp/ -xzf /tmp/mysql-connector-java-5.1.37.tar.gz \
     && rm /tmp/mysql-connector-java-5.1.37.tar.gz \
-    && cp /tmp/mysql-connector-java-5.1.37/mysql-connector-java-5.1.37-bin.jar $SQOOP_HOME/lib
+    && cp /tmp/mysql-connector-java-5.1.37/mysql-connector-java-5.1.37-bin.jar $SQOOP_HOME/lib \
+    # 타임존 한국시간으로 변경
+    && ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime 
 
 COPY ./jars/commons-lang-2.6.jar $SQOOP_HOME/lib
 COPY ./jars/postgresql-42.2.19.jre6.jar $SQOOP_HOME/lib
