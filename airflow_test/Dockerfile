@@ -2,11 +2,7 @@ FROM ubuntu:20.04
 
 LABEL maintainer="Jiyoung Choi <cjy@imrbiz.co.kr>"
 
-#init airflow 
-# WORKDIR /root
 
-#default shell
-# SHELL ["/bin/bash", "-c"]
 USER root
 
 RUN  apt-get update && apt-get install -y python3-pip && pip install apache-airflow && airflow db init \
@@ -15,6 +11,8 @@ RUN  apt-get update && apt-get install -y python3-pip && pip install apache-airf
 COPY requirements.txt /
 
 RUN pip3 install -r requirements.txt
+
+ENV PYSPARK_PYTHON=python3
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y openjdk-8-jdk \
@@ -52,9 +50,10 @@ RUN  wget ${BASE_URL}/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${
       && tar -xvzf spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz -C /opt/ \
       && mv /opt/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} /opt/spark \
       && rm spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz \
-      && cp /opt/spark/conf/spark-env.sh.template /opt/spark/spark-env.sh \
-      && echo "HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop" >> /opt/spark/spark-env.sh \ 
-      && echo "YARN_CONF_DIR=/opt/hadoop/etc/hadoop" >> /opt/spark/spark-env.sh 
+      && cp /opt/spark/conf/spark-env.sh.template /opt/spark/conf/spark-env.sh \
+      && echo "HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop" >> /opt/spark/conf/spark-env.sh \ 
+      && echo "YARN_CONF_DIR=/opt/hadoop/etc/hadoop" >> /opt/spark/conf/spark-env.sh \
+      && echo "PYSPARK_PYTHON=python3" >> /opt/spark/conf/spark-env.sh
 
 
 ENV PATH=/opt/hadoop/bin/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin

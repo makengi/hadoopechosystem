@@ -3,24 +3,56 @@ version: "3"
 services:
   
   airflow-server:
-    image: makengi12/airflow:1.5
-    #image: airflow_test
-    container_name: airflow-server
-    # entrypoint: ./run.sh
-    build: ./airflow
+    image: makengi12/airflow-server:1.0
+    container_name: airflow-test-server
     hostname: airflow-server
-    volumes:
-      - airflow:/root/airflow
-    ports:
-      - 8086:8086
-      - 8084:8081
     restart: "on-failure"
     stdin_open: true
+    volumes:
+        - airflow-volumes:/root/airflow
+    ports:
+      - 8087:8086
     tty: true
     environment:
       - HADOOP_HOME=/opt/hadoop
       - HADOOP_COMMON_HOME=/opt/hadoop
       - HADOOP_MAPRED_HOME=/opt/hadoop
+
+  airflow-scheduler:
+    image: makengi12/airflow-server:1.0
+    container_name: airflow-scheduler
+    hostname: airflow-scheduler
+    restart: "on-failure"
+    volumes:
+        - airflow-volumes:/root/airflow
+    depends_on:
+      - airflow-server
+    environment:
+      - SCHEDULER=True
+      - HADOOP_HOME=/opt/hadoop
+      - HADOOP_COMMON_HOME=/opt/hadoop
+      - HADOOP_MAPRED_HOME=/opt/hadoop
+
+
+        #airflow-server:
+        #image: makengi12/airflow:1.5
+    #image: airflow_test
+    #    container_name: airflow-server
+    # entrypoint: ./run.sh
+    #    build: ./airflow
+    #    hostname: airflow-server
+    #    volumes:
+    #  - airflow:/root/airflow
+    #    ports:
+    #          - 8086:8086
+    #  - 8084:8081
+    #restart: "on-failure"
+    #stdin_open: true
+    #tty: true
+    #environment:
+    #  - HADOOP_HOME=/opt/hadoop
+    #  - HADOOP_COMMON_HOME=/opt/hadoop
+    #  - HADOOP_MAPRED_HOME=/opt/hadoop
 
   namenode:
     image: makengi12/namenode:1.0
@@ -418,7 +450,7 @@ volumes:
   hadoop_namenode:
   hadoop_datanode:
   hadoop_historyserver:
-  airflow:
+          #airflow:
   zeppelin_logs:
   zeppelin_data:
   zeppelin_notebook:
@@ -431,3 +463,4 @@ volumes:
   pipeline-kafka-3-volume:
   data:
   flume_conf:
+  airflow-volumes:        
