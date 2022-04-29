@@ -8,6 +8,8 @@ services:
     hostname: airflow-server
     restart: "on-failure"
     stdin_open: true
+    depends_on:
+      - airflow-db
     volumes:
         - airflow-volumes:/root/airflow
     ports:
@@ -107,7 +109,7 @@ services:
       - "8030:8030"
 
   nodemanager1:
-    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    image: makengi12/nodemanager:1.0
     container_name: nodemanager
     hostname: nodemanager
     restart: always
@@ -416,17 +418,11 @@ services:
       - "3306:3306"
     volumes:
       - data:/bitnami/mysql/data
-      # - ./hue/ini/init.sql:/data/application/init.sql
     environment:
       - ALLOW_EMPTY_PASSWORD=yes 
       - MYSQL_USER=hue
       - MYSQL_PASSWORD=hue
       - MYSQL_DATABASE=hue
-      # MYSQL_ROOT_USER: root
-      # MYSQL_ROOT_PASSWORD: secret
-      # MYSQL_DATABASE: hue
-      # MYSQL_USER: root
-      # MYSQL_PASSWORD: secret
 
   presto-master:
     image: 'makengi12/prestodb:1.0'
@@ -446,11 +442,36 @@ services:
     environment:
       - WORKER_ID=worker1
 
+  airflow-db:
+    image: 'makengi12/airflow-db:1.0'         
+    container_name: airflow-db
+    ports:
+      - "3310:3306"
+    restart: always
+    volumes:
+      - airflow-db:/var/lib/mysql
+      - airflow-db-conf:/etc/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=1212
+      - MYSQL_DATABASE=airflow
+
+  test-db:
+    image: 'makengi12/airflow-db:1.0'         
+    container_name: test-db
+    ports:
+      - "3309:3306"
+    restart: always
+    volumes:
+      - test-db:/var/lib/mysql
+      - test-db-conf:/etc/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=1212
+      - MYSQL_DATABASE=test_db        
+
 volumes:
   hadoop_namenode:
   hadoop_datanode:
   hadoop_historyserver:
-          #airflow:
   zeppelin_logs:
   zeppelin_data:
   zeppelin_notebook:
@@ -463,4 +484,8 @@ volumes:
   pipeline-kafka-3-volume:
   data:
   flume_conf:
-  airflow-volumes:        
+  airflow-volumes:
+  airflow-db:
+  airflow-db-conf:
+  test-db:
+  test-db-conf:        

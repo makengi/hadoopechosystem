@@ -2,10 +2,27 @@ FROM ubuntu:20.04
 
 LABEL maintainer="Jiyoung Choi <cjy@imrbiz.co.kr>"
 
+#init airflow 
+# WORKDIR /root
 
+#default shell
+# SHELL ["/bin/bash", "-c"]
 USER root
 
-RUN  apt-get update && apt-get install -y python3-pip && pip install apache-airflow && airflow db init \
+# #python 3.8 to 3.7 
+# RUN apt-get update && apt-get install -y software-properties-common \
+# && add-apt-repository -y ppa:deadsnakes/ppa \
+# && apt-get update \
+# && apt-get install -y python3.7 \
+# && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 1
+
+RUN  apt-get update && apt-get install -y python3-pip \ 
+ && apt-get install -y libssl-dev \
+ && apt-get install -y mysql-client \
+ && apt-get install -y libmysqlclient-dev \
+ && pip install mysqlclient \
+ && pip install 'apache-airflow[mysql]' \ 
+ && pip install apache-airflow && airflow db init \
  && airflow users create --username airflow --firstname jiyoung --lastname choi --role Admin --password airflow --email cjy@imrbiz.co.kr
 
 COPY requirements.txt /
@@ -77,6 +94,7 @@ RUN wget http://archive.apache.org/dist/sqoop/1.4.7/sqoop-1.4.7.bin__hadoop-2.6.
     && cp /tmp/mysql-connector-java-5.1.37/mysql-connector-java-5.1.37-bin.jar $SQOOP_HOME/lib \
     # 타임존 한국시간으로 변경
     && ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime 
+
 
 
 
