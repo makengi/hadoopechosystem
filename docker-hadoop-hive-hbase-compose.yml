@@ -1,0 +1,252 @@
+version: "3"
+
+networks:
+  default:
+    name: hadoopnetwork
+
+services:
+  
+  namenode:
+    image: makengi12/namenode:1.0
+    # build: ./namenode
+    container_name: namenode
+    hostname: namenode
+    restart: always
+    ports:
+      - 9870:9870
+      - 9000:9000
+      - 50070:50070
+    volumes:
+      - hadoop_namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=test
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    env_file:
+      - ./hadoop.env
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode
+    hostname: datanode
+    restart: always
+    depends_on:
+      - namenode
+    volumes:
+      - hadoop_datanode:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+    ports:
+      - 9864:9864
+      - 9866:9866
+    env_file:
+      - ./hadoop.env
+
+
+  resourcemanager:
+    image: makengi12/resourcemanager:1.0
+    container_name: resourcemanager
+    hostname: resourcemanager
+    restart: always
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864"
+    env_file:
+      - ./hadoop.env
+    ports:
+      - "8088:8088"
+      - "8032:8032"
+      - "8031:8031"
+      - "8030:8030"
+
+  nodemanager:
+    image: makengi12/nodemanager:1.0
+    container_name: nodemanager
+    hostname: nodemanager
+    restart: always
+    ports:
+      - 8042:8042
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
+    env_file:
+      - ./hadoop.env
+
+  historyserver:
+    image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8
+    container_name: historyserver
+    hostname: historyserver
+    restart: always
+    ports:
+      - 8188:8188
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
+    volumes:
+      - hadoop_historyserver:/hadoop/yarn/timeline
+    env_file:
+      - ./hadoop.env
+
+  hive-server:
+    image: makengi12/hive:3.1.2-postgresql-metastore
+    container_name: hive-server
+    hostname: hive-server
+    depends_on:
+      - namenode
+      - datanode
+    env_file:
+      - ./hadoop-hive.env
+    environment:
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:postgresql://hive-metastore/metastore"
+      SERVICE_PRECONDITION: "hive-metastore:9083"
+    ports:
+      - "10000:10000"
+      - "10002:10002"
+
+  hive-metastore:
+    image: makengi12/hive:3.1.2-postgresql-metastore
+    container_name: hive-metastore
+    hostname: hive-metastore
+    env_file:
+      - ./hadoop-hive.env
+    command: /opt/hive/bin/hive --service metastore --hiveconf hive.root.logger=DEBUG,console
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 datanode:9864 hive-metastore-postgresql:5432"
+    ports:
+      - "9083:9083"
+
+  hive-metastore-postgresql:
+    image: bde2020/hive-metastore-postgresql:3.1.0
+    container_name: hive-metastore-postgresql
+    ports:
+      - "5433:5432"
+
+  
+  zeppelin:
+    image: makengi12/zeppelin:1.0
+    container_name: zeppelin
+    # build: ./zeppelin
+    ports:
+      - "8080:8080"
+    hostname: zeppelin  
+    environment:
+      ZEPPELIN_ADDR: '0.0.0.0'
+      ZEPPELIN_NOTEBOOK_DIR: '/notebook'
+      ZEPPELIN_LOG_DIR: '/logs'
+      SPARK_HOME: '/spark'
+    volumes:
+       - zeppelin_logs:/logs
+       - zeppelin_data:/data
+       - zeppelin_notebook:/notebook 
+
+  hbase-master:
+    image: makengi12/hbase-master:1.0
+    hostname: hbase-master
+    ports:
+      - "16010:16010"  
+    env_file:
+      - ./hbase.env
+    environment:
+      SERVICE_PRECONDITION: "pipeline-zookeeper-a:2181 pipeline-zookeeper-b:2181 pipeline-zookeeper-c:2181"
+
+  hbase-regionserver-1:
+    image: makengi12/hbase-region:1.0
+    hostname: hbase-regionserver-1
+    depends_on:
+      - "hbase-master"
+    env_file:
+      - ./hbase.env
+    environment:
+      SERVICE_PRECONDITION: "hbase-master:16010 pipeline-zookeeper-a:2181 pipeline-zookeeper-b:2181 pipeline-zookeeper-c:2181"
+      HBASE_CONF_hbase_regionserver_hostname: hbase-regionserver-1
+
+
+  cloudera:
+    image: gethue/hue:4.10.0
+    hostname: hue
+    container_name: hue
+    dns: 8.8.8.8
+    ports:
+      - "8988:8988"
+    volumes:
+      - ./hue/ini/hue.ini:/usr/share/hue/desktop/conf/z-hue.ini
+    depends_on:
+      - "database"
+
+  database:
+    image: 'bitnami/mysql:latest'
+    container_name: mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    volumes:
+      - data:/bitnami/mysql/data
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes 
+      - MYSQL_USER=hue
+      - MYSQL_PASSWORD=hue
+      - MYSQL_DATABASE=hue
+
+  presto-master:
+    image: 'makengi12/prestodb:1.0'
+    container_name: presto-master
+    hostname: presto-master
+    environment:
+      - WORKER=false
+    restart: always
+    ports:
+      - "8079:8080"
+
+  presto-worker:
+    image: 'makengi12/prestodb-worker:1.0'
+    container_name: presto-worker
+    hostname: presto-worker
+    restart: always
+    environment:
+      - WORKER_ID=worker1
+
+  pipeline-zookeeper-a:
+    image: makengi12/zookeeper:1.0
+    container_name: pipeline-zookeeper-a 
+    restart: always 
+    hostname: pipeline-zookeeper-a
+    environment: 
+        MY_ID: 1 
+    volumes: 
+      - pipeline-zookeeper-a-volume:/data
+
+  pipeline-zookeeper-b: 
+    image: makengi12/zookeeper:1.0
+    container_name: pipeline-zookeeper-b 
+    restart: always 
+    hostname: pipeline-zookeeper-b
+    environment: 
+        MY_ID: 2 
+    volumes: 
+      - pipeline-zookeeper-b-volume:/data 
+    
+  pipeline-zookeeper-c: 
+    image: makengi12/zookeeper:1.0
+    container_name: pipeline-zookeeper-c  
+    restart: always 
+    hostname: pipeline-zookeeper-c
+    environment: 
+        MY_ID: 3 
+    volumes: 
+      - pipeline-zookeeper-c-volume:/data    
+
+volumes:
+  hadoop_namenode:
+  hadoop_datanode:
+  hadoop_historyserver:
+  zeppelin_logs:
+  zeppelin_data:
+  zeppelin_notebook:
+  grafana:
+  pipeline-zookeeper-a-volume:
+  pipeline-zookeeper-b-volume:   
+  pipeline-zookeeper-c-volume:
+  data:
+  flume_conf:
+  airflow-volumes:
+  airflow-db:
+  airflow-db-conf:
+  test-db:
+  test-db-conf:        
