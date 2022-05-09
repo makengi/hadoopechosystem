@@ -1,6 +1,7 @@
 FROM makengi12/hbase-base:1.0
 
-COPY start.sh  /start.sh
-RUN chmod +x /start.sh
+RUN mkdir -p /zookeeper-data
+COPY run.sh  /run.sh
+RUN chmod +x /run.sh
 
-ENTRYPOINT ["/start.sh"]
+CMD ["/run.sh"]

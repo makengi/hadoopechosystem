@@ -1,5 +1,9 @@
 version: "3"
 
+networks:
+  default:
+    name: hadoopnetwork
+
 services:
   
   airflow-server:
@@ -35,6 +39,10 @@ services:
       - HADOOP_COMMON_HOME=/opt/hadoop
       - HADOOP_MAPRED_HOME=/opt/hadoop
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 83eec36fb51754ded710bcf520cffa22db173803
   namenode:
     image: makengi12/namenode:1.0
     # build: ./namenode
@@ -180,50 +188,10 @@ services:
     env_file:
       - ./hadoop.env  
 
-  # spark-worker-1:
-  #   image: makengi12/spark-worker:1.0
-  #   container_name: spark-worker-1
-  #   hostname: spark-worker-1
-  #   depends_on:
-  #     - spark-master
-  #   ports:
-  #     - "8081:8081"
-  #   environment:
-  #     - "SPARK_MASTER=spark://spark-master:7077"
-  #     - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
-  #     - MEMORY=4g
-  #     - CORE=3
-
-  # spark-worker-2:
-  #   image: makengi12/spark-worker:1.0
-  #   container_name: spark-worker-2
-  #   hostname: spark-worker-2
-  #   depends_on:
-  #     - spark-master
-  #   ports:
-  #     - "8082:8081"
-  #   environment:
-  #     - "SPARK_MASTER=spark://spark-master:7077"
-  #     - MEMORY=4g
-  #     - CORE=3  
-
-  # spark-worker-3:
-  #   image: makengi12/spark-worker:1.0
-  #   container_name: spark-worker-3
-  #   hostname: spark-worker-3
-  #   depends_on:
-  #     - spark-master
-  #   ports:
-  #     - "8083:8081"
-  #   environment:
-  #     - "SPARK_MASTER=spark://spark-master:7077"    
-  #     - MEMORY=4g
-  #     - CORE=2
-
-
   hive-server:
-    image: bde2020/hive:2.3.2-postgresql-metastore
+    image: makengi12/hive:3.1.2-postgresql-metastore
     container_name: hive-server
+    hostname: hive-server
     depends_on:
       - namenode
       - datanode
@@ -237,19 +205,22 @@ services:
       - "10002:10002"
 
   hive-metastore:
-    image: bde2020/hive:2.3.2-postgresql-metastore
+    image: makengi12/hive:3.1.2-postgresql-metastore
     container_name: hive-metastore
+    hostname: hive-metastore
     env_file:
       - ./hadoop-hive.env
-    command: /opt/hive/bin/hive --service metastore
+    command: /opt/hive/bin/hive --service metastore --hiveconf hive.root.logger=DEBUG,console
     environment:
       SERVICE_PRECONDITION: "namenode:9870 datanode:9864 hive-metastore-postgresql:5432"
     ports:
       - "9083:9083"
 
   hive-metastore-postgresql:
-    image: bde2020/hive-metastore-postgresql:2.3.0
+    image: bde2020/hive-metastore-postgresql:3.1.0
     container_name: hive-metastore-postgresql
+    ports:
+      - "5433:5432"
 
   
   zeppelin:
@@ -281,15 +252,15 @@ services:
   hbase:
     image: makengi12/hbase-standalone:1.0
     container_name: hbase
+    hostname: hbase
+    env_file:
+      - ./hbase.env
     ports:
       - 16000:16000
       - 16010:16010
       - 16020:16020
       - 16030:16030
-      # - 2888:2888
-      # - 3888:3888
-      # - 2181:2181    
-
+    
   
   pipeline-zookeeper-a:
     image: makengi12/zookeeper:1.0
