@@ -28,3 +28,4 @@ if [ -z $cat_result ]
 then
    echo $TIMESTAMP_ON >> /etc/mysql/mariadb.cnf
 fi
+
