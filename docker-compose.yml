@@ -39,10 +39,6 @@ services:
       - HADOOP_COMMON_HOME=/opt/hadoop
       - HADOOP_MAPRED_HOME=/opt/hadoop
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 83eec36fb51754ded710bcf520cffa22db173803
   namenode:
     image: makengi12/namenode:1.0
     # build: ./namenode
@@ -222,7 +218,6 @@ services:
     ports:
       - "5433:5432"
 
-  
   zeppelin:
     image: makengi12/zeppelin:1.0
     container_name: zeppelin
@@ -238,7 +233,8 @@ services:
     volumes:
        - zeppelin_logs:/logs
        - zeppelin_data:/data
-       - zeppelin_notebook:/notebook 
+       - zeppelin_notebook:/notebook
+       - ../workspace/zeppelin_workspace:/root 
 
   grafana:
     image: grafana/grafana
@@ -344,9 +340,6 @@ services:
       spoolDir: 
     volumes:
       - flume_conf:/opt/flume/conf
-
-
-
 
   cloudera:
     image: gethue/hue:4.10.0
