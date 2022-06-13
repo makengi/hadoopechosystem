@@ -117,72 +117,72 @@ services:
     env_file:
       - ./hadoop.env
 
-  spark-master:
-    image: makengi12/spark-master:1.3
-    container_name: spark-master
-    hostname: spark-master
-    # build: ./master
-    depends_on:
-      - namenode
-      - datanode
-    ports:
-      - "8085:8085"
-      - "7077:7077"
-    environment:
-      - INIT_DAEMON_STEP=setup_spark
-      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
-      - HADOOP_IP=192.168.0.12
-    env_file:
-      - ./hadoop.env  
+  # spark-master:
+  #   image: makengi12/spark-master:1.3
+  #   container_name: spark-master
+  #   hostname: spark-master
+  #   # build: ./master
+  #   depends_on:
+  #     - namenode
+  #     - datanode
+  #   ports:
+  #     - "8085:8085"
+  #     - "7077:7077"
+  #   environment:
+  #     - INIT_DAEMON_STEP=setup_spark
+  #     - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+  #     - HADOOP_IP=192.168.0.12
+  #   env_file:
+  #     - ./hadoop.env  
       
-  spark-worker-1:
-    image: makengi12/spark-worker:1.1
-    container_name: spark-worker-1
-    hostname: spark-worker-1
-    depends_on:
-      - spark-master
-    ports:
-      - "8081:8081"
-    environment:
-      - "SPARK_MASTER=spark://spark-master:7077"
-      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
-      - MEMORY=4g
-      - CORE=3
-      - HADOOP_IP=192.168.0.12
-    env_file:
-      - ./hadoop.env  
+  # spark-worker-1:
+  #   image: makengi12/spark-worker:1.1
+  #   container_name: spark-worker-1
+  #   hostname: spark-worker-1
+  #   depends_on:
+  #     - spark-master
+  #   ports:
+  #     - "8081:8081"
+  #   environment:
+  #     - "SPARK_MASTER=spark://spark-master:7077"
+  #     - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+  #     - MEMORY=4g
+  #     - CORE=3
+  #     - HADOOP_IP=192.168.0.12
+  #   env_file:
+  #     - ./hadoop.env  
 
-  spark-worker-2:
-    image: makengi12/spark-worker:1.1
-    container_name: spark-worker-2
-    hostname: spark-worker-2
-    depends_on:
-      - spark-master
-    ports:
-      - "8082:8081"
-    environment:
-      - "SPARK_MASTER=spark://spark-master:7077"
-      - MEMORY=4g
-      - CORE=3
-      - HADOOP_IP=192.168.0.12
-    env_file:
-      - ./hadoop.env    
+  # spark-worker-2:
+  #   image: makengi12/spark-worker:1.1
+  #   container_name: spark-worker-2
+  #   hostname: spark-worker-2
+  #   depends_on:
+  #     - spark-master
+  #   ports:
+  #     - "8082:8081"
+  #   environment:
+  #     - "SPARK_MASTER=spark://spark-master:7077"
+  #     - MEMORY=4g
+  #     - CORE=3
+  #     - HADOOP_IP=192.168.0.12
+  #   env_file:
+  #     - ./hadoop.env    
 
-  spark-worker-3:
-    image: makengi12/spark-worker:1.1
-    container_name: spark-worker-3
-    hostname: spark-worker-3
-    depends_on:
-      - spark-master
-    ports:
-      - "8083:8081"
-    environment:
-      - "SPARK_MASTER=spark://spark-master:7077"    
-      - MEMORY=4g
-      - CORE=2
-      - HADOOP_IP=192.168.0.12
-    env_file:
-      - ./hadoop.env  
+  # spark-worker-3:
+  #   image: makengi12/spark-worker:1.1
+  #   container_name: spark-worker-3
+  #   hostname: spark-worker-3
+  #   depends_on:
+  #     - spark-master
+  #   ports:
+  #     - "8083:8081"
+  #   environment:
+  #     - "SPARK_MASTER=spark://spark-master:7077"    
+  #     - MEMORY=4g
+  #     - CORE=2
+  #     - HADOOP_IP=192.168.0.12
+  #   env_file:
+  #     - ./hadoop.env  
 
   hive-server:
     image: makengi12/hive:3.1.2-postgresql-metastore
@@ -243,80 +243,111 @@ services:
       - "3000:3000"
     volumes:
        - grafana:/var/lib/grafana
+       - grafana_conf:/usr/share/grafana/conf
 
-
-  hbase:
-    image: makengi12/hbase-standalone:1.0
-    container_name: hbase
-    hostname: hbase
+  hbase-master:
+    image: makengi12/hbase-master:1.0
+    container_name: hbase-master
+    hostname: hbase-master
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+    ports:
+      - "16010:16010"  
     env_file:
       - ./hbase.env
-    ports:
-      - 16000:16000
-      - 16010:16010
-      - 16020:16020
-      - 16030:16030
+    environment:
+      SERVICE_PRECONDITION: "zookeeper1:2181 zookeeper2:2181 zookeeper3:2181"
+
+  hbase-regionserver-1:
+    image: makengi12/hbase-region:1.0
+    hostname: hbase-regionserver-1
+    container_name: hbase-regionserver-1
+    depends_on:
+      - hbase-master
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+    env_file:
+      - ./hbase.env
+    environment:
+      SERVICE_PRECONDITION: "hbase-master:16010 zookeeper1:2181 zookeeper2:2181 zookeeper3:2181"
+      HBASE_CONF_hbase_regionserver_hostname: hbase-regionserver-1
+
+
+  # hbase:
+  #   image: makengi12/hbase-standalone:1.0
+  #   container_name: hbase
+  #   hostname: hbase
+  #   env_file:
+  #     - ./hbase.env
+  #   ports:
+  #     - 16000:16000
+  #     - 16010:16010
+  #     - 16020:16020
+  #     - 16030:16030
     
   
-  pipeline-zookeeper-a:
-    image: makengi12/zookeeper:1.0
-    container_name: pipeline-zookeeper-a 
-    restart: always 
-    hostname: pipeline-zookeeper-a
-    environment: 
-        MY_ID: 1 
-    volumes: 
-      - pipeline-zookeeper-a-volume:/data
+  # pipeline-zookeeper-a:
+  #   image: makengi12/zookeeper:1.0
+  #   container_name: pipeline-zookeeper-a 
+  #   restart: always 
+  #   hostname: pipeline-zookeeper-a
+  #   environment: 
+  #       MY_ID: 1 
+  #   volumes: 
+  #     - pipeline-zookeeper-a-volume:/data
 
-  pipeline-zookeeper-b: 
-    image: makengi12/zookeeper:1.0
-    container_name: pipeline-zookeeper-b 
-    restart: always 
-    hostname: pipeline-zookeeper-b
-    environment: 
-        MY_ID: 2 
-    volumes: 
-      - pipeline-zookeeper-b-volume:/data 
+  # pipeline-zookeeper-b: 
+  #   image: makengi12/zookeeper:1.0
+  #   container_name: pipeline-zookeeper-b 
+  #   restart: always 
+  #   hostname: pipeline-zookeeper-b
+  #   environment: 
+  #       MY_ID: 2 
+  #   volumes: 
+  #     - pipeline-zookeeper-b-volume:/data 
     
-  pipeline-zookeeper-c: 
-    image: makengi12/zookeeper:1.0
-    container_name: pipeline-zookeeper-c  
-    restart: always 
-    hostname: pipeline-zookeeper-c
-    environment: 
-        MY_ID: 3 
-    volumes: 
-      - pipeline-zookeeper-c-volume:/data
+  # pipeline-zookeeper-c: 
+  #   image: makengi12/zookeeper:1.0
+  #   container_name: pipeline-zookeeper-c  
+  #   restart: always 
+  #   hostname: pipeline-zookeeper-c
+  #   environment: 
+  #       MY_ID: 3 
+  #   volumes: 
+  #     - pipeline-zookeeper-c-volume:/data
 
-  pipeline-kafka-1: 
-    image: makengi12/kafka:1.0
-    container_name: pipeline-kafka-1 
-    environment: 
-      BROKER_ID: 1 
-    hostname: pipeline-kafka-1  
-    restart: always 
-    volumes: 
-      - pipeline-kafka-1-volume:/data 
+  # pipeline-kafka-1: 
+  #   image: makengi12/kafka:1.0
+  #   container_name: pipeline-kafka-1 
+  #   environment: 
+  #     BROKER_ID: 1 
+  #   hostname: pipeline-kafka-1  
+  #   restart: always 
+  #   volumes: 
+  #     - pipeline-kafka-1-volume:/data 
         
-  pipeline-kafka-2: 
-    image: makengi12/kafka:1.0
-    container_name: pipeline-kafka-2 
-    environment: 
-      BROKER_ID: 2 
-    hostname: pipeline-kafka-2 
-    restart: always 
-    volumes: 
-      - pipeline-kafka-2-volume:/data 
+  # pipeline-kafka-2: 
+  #   image: makengi12/kafka:1.0
+  #   container_name: pipeline-kafka-2 
+  #   environment: 
+  #     BROKER_ID: 2 
+  #   hostname: pipeline-kafka-2 
+  #   restart: always 
+  #   volumes: 
+  #     - pipeline-kafka-2-volume:/data 
     
-  pipeline-kafka-3:
-    image: makengi12/kafka:1.0
-    container_name: pipeline-kafka-3 
-    environment: 
-      BROKER_ID: 3 
-    hostname: pipeline-kafka-3 
-    restart: always
-    volumes: 
-      - pipeline-kafka-3-volume:/data
+  # pipeline-kafka-3:
+  #   image: makengi12/kafka:1.0
+  #   container_name: pipeline-kafka-3 
+  #   environment: 
+  #     BROKER_ID: 3 
+  #   hostname: pipeline-kafka-3 
+  #   restart: always
+  #   volumes: 
+  #     - pipeline-kafka-3-volume:/data
 
   kafka_ui: 
     image: obsidiandynamics/kafdrop
@@ -325,7 +356,7 @@ services:
     ports: 
       - "9020:9000"
     environment: 
-      KAFKA_BROKERCONNECT: "pipeline-kafka-1:9092,pipeline-kafka-2:9092,pipeline-kafka-3:9092"
+      KAFKA_BROKERCONNECT: "kafka1:9092,kafka2:9092,kafka3:9092"
       JVM_OPTS: "-Xms32M -Xmx64M"
 
   flume:
@@ -409,7 +440,157 @@ services:
       - test-db-conf:/etc/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=1212
-      - MYSQL_DATABASE=test_db        
+      - MYSQL_DATABASE=test_db
+
+  influxdb:
+    image: bitnami/influxdb:latest
+    container_name: influxdb
+    ports:
+      - 8086:8086
+      - 8085:8088
+    environment:
+      - INFLUXDB_ADMIN_USER_PASSWORD=bitnami123
+      - INFLUXDB_ADMIN_USER_TOKEN=admintoken123
+      - INFLUXDB_USER=root
+      - INFLUXDB_USER_PASSWORD=bitnami123
+      - INFLUXDB_HTTP_AUTH_ENABLED=false
+      - INFLUXDB_DB=my_database
+    volumes:
+      - influxdb_data:/bitnami/influxdb
+ 
+  zookeeper1:
+    image: 'bitnami/zookeeper:3.7'
+    container_name: zookeeper1
+    ports:
+      - '2181:2181'
+    volumes:
+      - zookeeper1:/bitnami/zookeeper
+    environment:
+      - ZOO_SERVER_ID=1
+      - ZOO_SERVERS=0.0.0.0:2888:3888,zookeeper2:2888:3888,zookeeper3:2888:3888
+      - ALLOW_ANONYMOUS_LOGIN=yes
+
+  zookeeper2:
+    image: 'bitnami/zookeeper:3.7'
+    container_name: zookeeper2
+    ports:
+      - '2182:2181'
+    volumes:
+      - zookeeper2:/bitnami/zookeeper
+    environment:
+      - ZOO_SERVER_ID=2
+      - ZOO_SERVERS=zookeeper1:2888:3888,0.0.0.0:2888:3888,zookeeper3:2888:3888
+      - ALLOW_ANONYMOUS_LOGIN=yes
+
+  zookeeper3:
+    image: 'bitnami/zookeeper:3.7'
+    container_name: zookeeper3
+    ports:
+      - '2183:2181'
+    volumes:
+      - zookeeper3:/bitnami/zookeeper
+    environment:
+      - ZOO_SERVER_ID=3
+      - ZOO_SERVERS=zookeeper1:2888:3888,zookeeper2:2888:3888,0.0.0.0:2888:3888                
+      - ALLOW_ANONYMOUS_LOGIN=yes
+
+  kafka1:
+    image: 'bitnami/kafka:3.1.0'
+    container_name: kafka1
+    hostname: kafka1
+    ports:
+      - '9093:9093'
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper1:2181,zookeeper2:2181,zookeeper3:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka1:9092,EXTERNAL://localhost:9093
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
+    volumes:
+      - kafka1:/bitnami/kafka  
+
+  kafka2:
+    image: 'bitnami/kafka:3.1.0'
+    container_name: kafka2
+    hostname: kafka2
+    ports:
+      - '9094:9094'
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper1:2181,zookeeper2:2181,zookeeper3:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka2:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
+      # - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+    volumes:
+      - kafka2:/bitnami/kafka    
+
+  kafka3:
+    image: 'bitnami/kafka:3.1.0'
+    container_name: kafka3
+    hostname: kafka3
+    ports:
+      - '9095:9095'
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper1:2181,zookeeper2:2181,zookeeper3:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9095
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka3:9092,EXTERNAL://localhost:9095
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
+      # - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+    volumes:
+      - kafka3:/bitnami/kafka
+
+  nimbus:
+    image: storm:latest
+    container_name: nimbus
+    command: storm nimbus
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+    restart: always
+    ports:
+      - 6627:6627
+    volumes:
+       - storm:/conf/
+
+  supervisor-ui:
+    image: storm:latest
+    container_name: supervisor-ui
+    command: storm ui
+    depends_on:
+        - nimbus
+    ports:
+     - "6060:8080"
+    volumes:
+       - storm:/conf/
+
+  supervisor:
+    image: storm:latest
+    container_name: supervisor
+    command: storm supervisor
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+      - nimbus
+    restart: always
+    volumes:
+       - storm:/conf/
+
+  prometheus:
+    image: docker.io/bitnami/prometheus:2
+    ports:
+      - '9190:9090'
+
+  jmx-exporter:
+    image: docker.io/bitnami/jmx-exporter:0.17.0-debian-11-r4
+    ports:
+      - 5556:5556                   
 
 volumes:
   hadoop_namenode:
@@ -419,16 +600,26 @@ volumes:
   zeppelin_data:
   zeppelin_notebook:
   grafana:
-  pipeline-zookeeper-a-volume:
-  pipeline-zookeeper-b-volume:   
-  pipeline-zookeeper-c-volume:
-  pipeline-kafka-1-volume:
-  pipeline-kafka-2-volume:
-  pipeline-kafka-3-volume:
+  grafana_conf:
+  zookeeper1:
+  zookeeper2:
+  zookeeper3:
+  kafka1:
+  kafka2:
+  kafka3:
+  storm:
+  # pipeline-zookeeper-a-volume:
+  # pipeline-zookeeper-b-volume: 
+  # pipeline-zookeeper-c-volume:
+  # pipeline-kafka-1-volume:
+  # pipeline-kafka-2-volume:
+  # pipeline-kafka-3-volume:
   data:
   flume_conf:
   airflow-volumes:
   airflow-db:
   airflow-db-conf:
   test-db:
-  test-db-conf:        
+  test-db-conf: 
+  influxdb_data:
+  # zookeeper-persistence:       
