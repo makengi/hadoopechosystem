@@ -41,19 +41,21 @@ services:
 
   namenode:
     image: makengi12/namenode:1.0
-    # build: ./namenode
     container_name: namenode
     hostname: namenode
     restart: always
     ports:
       - 9870:9870
       - 9000:9000
-      - 50070:50070
+      - 27001:27001 # jmx
     volumes:
       - hadoop_namenode:/hadoop/dfs/name
+      - ./prometheus_agent:/agent
+      - hadoop_conf:/opt
     environment:
       - CLUSTER_NAME=test
       - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_NAMENODE_OPTS=-javaagent:/agent/jmx_prometheus_javaagent-0.17.0.jar=27001:/agent/config.yaml $HDFS_NAMENODE_OPTS
     env_file:
       - ./hadoop.env
 
@@ -66,12 +68,16 @@ services:
       - namenode
     volumes:
       - hadoop_datanode:/hadoop/dfs/data
+      - ./prometheus_agent:/agent
+      - hadoop_conf:/opt
     environment:
-      SERVICE_PRECONDITION: "namenode:9870"
-      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+      - SERVICE_PRECONDITION=namenode:9870
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_DATANODE_OPTS=-javaagent:/agent/jmx_prometheus_javaagent-0.17.0.jar=27002:/agent/config.yaml $HDFS_DATANODE_OPTS
     ports:
       - 9864:9864
       - 9866:9866
+      - 27002:27002
     env_file:
       - ./hadoop.env
 
@@ -168,22 +174,6 @@ services:
   #   env_file:
   #     - ./hadoop.env    
 
-  # spark-worker-3:
-  #   image: makengi12/spark-worker:1.1
-  #   container_name: spark-worker-3
-  #   hostname: spark-worker-3
-  #   depends_on:
-  #     - spark-master
-  #   ports:
-  #     - "8083:8081"
-  #   environment:
-  #     - "SPARK_MASTER=spark://spark-master:7077"    
-  #     - MEMORY=4g
-  #     - CORE=2
-  #     - HADOOP_IP=192.168.0.12
-  #   env_file:
-  #     - ./hadoop.env  
-
   hive-server:
     image: makengi12/hive:3.1.2-postgresql-metastore
     container_name: hive-server
@@ -244,6 +234,7 @@ services:
     volumes:
        - grafana:/var/lib/grafana
        - grafana_conf:/usr/share/grafana/conf
+       - ./test_apps:/test
 
   hbase-master:
     image: makengi12/hbase-master:1.0
@@ -274,80 +265,6 @@ services:
     environment:
       SERVICE_PRECONDITION: "hbase-master:16010 zookeeper1:2181 zookeeper2:2181 zookeeper3:2181"
       HBASE_CONF_hbase_regionserver_hostname: hbase-regionserver-1
-
-
-  # hbase:
-  #   image: makengi12/hbase-standalone:1.0
-  #   container_name: hbase
-  #   hostname: hbase
-  #   env_file:
-  #     - ./hbase.env
-  #   ports:
-  #     - 16000:16000
-  #     - 16010:16010
-  #     - 16020:16020
-  #     - 16030:16030
-    
-  
-  # pipeline-zookeeper-a:
-  #   image: makengi12/zookeeper:1.0
-  #   container_name: pipeline-zookeeper-a 
-  #   restart: always 
-  #   hostname: pipeline-zookeeper-a
-  #   environment: 
-  #       MY_ID: 1 
-  #   volumes: 
-  #     - pipeline-zookeeper-a-volume:/data
-
-  # pipeline-zookeeper-b: 
-  #   image: makengi12/zookeeper:1.0
-  #   container_name: pipeline-zookeeper-b 
-  #   restart: always 
-  #   hostname: pipeline-zookeeper-b
-  #   environment: 
-  #       MY_ID: 2 
-  #   volumes: 
-  #     - pipeline-zookeeper-b-volume:/data 
-    
-  # pipeline-zookeeper-c: 
-  #   image: makengi12/zookeeper:1.0
-  #   container_name: pipeline-zookeeper-c  
-  #   restart: always 
-  #   hostname: pipeline-zookeeper-c
-  #   environment: 
-  #       MY_ID: 3 
-  #   volumes: 
-  #     - pipeline-zookeeper-c-volume:/data
-
-  # pipeline-kafka-1: 
-  #   image: makengi12/kafka:1.0
-  #   container_name: pipeline-kafka-1 
-  #   environment: 
-  #     BROKER_ID: 1 
-  #   hostname: pipeline-kafka-1  
-  #   restart: always 
-  #   volumes: 
-  #     - pipeline-kafka-1-volume:/data 
-        
-  # pipeline-kafka-2: 
-  #   image: makengi12/kafka:1.0
-  #   container_name: pipeline-kafka-2 
-  #   environment: 
-  #     BROKER_ID: 2 
-  #   hostname: pipeline-kafka-2 
-  #   restart: always 
-  #   volumes: 
-  #     - pipeline-kafka-2-volume:/data 
-    
-  # pipeline-kafka-3:
-  #   image: makengi12/kafka:1.0
-  #   container_name: pipeline-kafka-3 
-  #   environment: 
-  #     BROKER_ID: 3 
-  #   hostname: pipeline-kafka-3 
-  #   restart: always
-  #   volumes: 
-  #     - pipeline-kafka-3-volume:/data
 
   kafka_ui: 
     image: obsidiandynamics/kafdrop
@@ -586,6 +503,8 @@ services:
     image: docker.io/bitnami/prometheus:2
     ports:
       - '9190:9090'
+    volumes:
+      - prometheus:/opt/bitnami/prometheus  
 
   jmx-exporter:
     image: docker.io/bitnami/jmx-exporter:0.17.0-debian-11-r4
@@ -594,7 +513,9 @@ services:
 
 volumes:
   hadoop_namenode:
+  hadoop_conf:
   hadoop_datanode:
+  prometheus:
   hadoop_historyserver:
   zeppelin_logs:
   zeppelin_data:
@@ -608,12 +529,6 @@ volumes:
   kafka2:
   kafka3:
   storm:
-  # pipeline-zookeeper-a-volume:
-  # pipeline-zookeeper-b-volume: 
-  # pipeline-zookeeper-c-volume:
-  # pipeline-kafka-1-volume:
-  # pipeline-kafka-2-volume:
-  # pipeline-kafka-3-volume:
   data:
   flume_conf:
   airflow-volumes:
@@ -622,4 +537,3 @@ volumes:
   test-db:
   test-db-conf: 
   influxdb_data:
-  # zookeeper-persistence:       
