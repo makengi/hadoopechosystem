@@ -44,14 +44,15 @@ COPY config/OneM2M-Avro-Hdfs.conf $FLUME_HOME/conf
 COPY config/OneM2M-Kafka-Agent-conf.properties $FLUME_HOME/conf
 COPY config/test.conf $FLUME_HOME/conf
 COPY config/init.sh /init.sh
+COPY config/run.sh /run.sh
 COPY config/flume-env.sh $FLUME_HOME/conf
 
 
-RUN chmod a+x /init.sh
+RUN chmod a+x /init.sh && chmod a+x /run.sh
 RUN /bin/bash -c "source /opt/flume/conf/flume-env.sh"
 
 # Shell execute
-CMD ["/init.sh"]
+CMD ["/run.sh"]
 
 
 

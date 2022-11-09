@@ -10,6 +10,5 @@ else
     echo "##### Start Scheduler Server #####";
     airflow scheduler     
 fi
-#airflow webserver
 
-#tail -f /dev/null
+#airflow webserver
